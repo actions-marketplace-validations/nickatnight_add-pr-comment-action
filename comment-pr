@@ -30,4 +30,5 @@ if not pr_number:
     raise Exception("No PR found.")
 
 
-requests.post(f"{repo_url}issues/{pr_number}/comments", data={"body": INPUT_BODY}, headers=headers)
+req = requests.post(f"{repo_url}pulls/{pr_number}/comments", data={"body": INPUT_BODY}, headers=headers)
+req.raise_for_status()
