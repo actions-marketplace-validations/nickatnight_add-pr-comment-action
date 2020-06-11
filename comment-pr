@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import json
 import os
 import requests
 
@@ -7,7 +8,10 @@ import requests
 API_BASE = "https://api.github.com/repos/"
 
 INPUT_BODY = os.getenv("INPUT_BODY")
-event_json = requests.get(os.getenv("GITHUB_EVENT_PATH")).json()
+
+with open(os.getenv("GITHUB_EVENT_PATH")) as json_file:
+    event_json = json.load(json_file)
+
 repo_name = event_json["repository"]["full_name"]
 repo_url = f"{API_BASE}{repo_name}/"
 pr_number = None
