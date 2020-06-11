@@ -1,0 +1,15 @@
+# action.yml
+name: 'add-pr-comment-action'
+description: 'Comment on a pull request'
+author: 'nickatnight'
+inputs:
+  body:  # id of input
+    description: 'Body of comment'
+    required: true
+    default: ''
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+branding:
+  icon: 'code'
+  color: 'blue'
