@@ -2,33 +2,31 @@
 
 import json
 import os
-import requests
+
+from github import Github
 
 
-API_BASE = "https://api.github.com/repos/"
-AUTH_HEADER = f"token {os.getenv('GITHUB_TOKEN')}"
 INPUT_BODY = os.getenv("INPUT_BODY")
 
+g = Github(os.getenv("GITHUB_TOKEN"))
 with open(os.getenv("GITHUB_EVENT_PATH")) as json_file:
     event_json = json.load(json_file)
 
 repo_name = event_json["repository"]["full_name"]
-repo_url = f"{API_BASE}{repo_name}/"
-headers = {"Authorization": AUTH_HEADER}
-pr_number = None
+org, repo = repo_name.split("/")
+o = g.get_organization(org)
+r = g.get_repo(repo)
+pull_request = None
 
 if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
-    pr_number = event_json["number"]
+    pull_request = r.get_pull(event_json["number"])
 else:
-    pulls = requests.get(f"{repo_url}pulls", headers=headers).json()
     push_head = event_json["after"]
-    for pr in pulls:
-        if push_head == pr.get("head").get("sha"):
-            pr_number = pr["number"]
+    for pr in r.pulls():
+        if push_head == pr.head.sha:
+            pull_request = pr
 
-if not pr_number:
+if not pull_request:
     raise Exception("No PR found.")
 
-
-req = requests.post(f"{repo_url}pulls/{pr_number}/comments", data={"body": INPUT_BODY}, headers=headers)
-req.raise_for_status()
+pull_request.create_issue_comment(INPUT_BODY)
