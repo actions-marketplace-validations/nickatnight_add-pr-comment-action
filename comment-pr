@@ -19,7 +19,7 @@ pr_number = None
 if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
     pr_number = event_json["number"]
 else:
-    pulls = requests.get(f"{repo_url}pulls")
+    pulls = requests.get(f"{repo_url}pulls").json()
     push_head = event_json["after"]
     for pr in pulls:
         if push_head == pr.get("head").get("sha"):
