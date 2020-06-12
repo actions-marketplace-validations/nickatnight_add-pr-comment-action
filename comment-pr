@@ -5,30 +5,67 @@ import os
 import sys
 
 from github import Github
+from github.Repository import Repository
 
 
-INPUT_BODY = os.getenv("INPUT_BODY")
+INPUT_BODY = os.getenv("INPUT_BODY")                # input 'body' from action
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")            # pass as env var from action
+GITHUB_EVENT_PATH = os.getenv("GITHUB_EVENT_PATH")  # prodvided by GitHub runner
+GITHUB_EVENT_NAME = os.getenv("GITHUB_EVENT_NAME")  # prodvided by GitHub runner
 
-g = Github(os.getenv("GITHUB_TOKEN"))
-with open(os.getenv("GITHUB_EVENT_PATH")) as json_file:
-    event_json = json.load(json_file)
 
-repo_name = event_json["repository"]["full_name"]
-org, repo = repo_name.split("/")
-o = g.get_organization(org)
-r = o.get_repo(repo)
-pull_request = None
+class CommentPR:
+    """post a comment to a github pull request
+    """
+    def __init__(self) -> None:
+        if not GITHUB_TOKEN:
+            print(f"Missing GITHUB_TOKEN")
+            sys.exit(0)
 
-if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
-    pull_request = r.get_pull(event_json["number"])
-else:
-    push_head = event_json["after"]
-    for pr in r.get_pulls():
-        if push_head == pr.head.sha:
-            pull_request = pr
+        self.github = Github(GITHUB_TOKEN)
+        self.event_json = None
 
-if not pull_request:
-    print("No PR found.")
-    sys.exit(0)
+        self._read_event_path_data()
 
-pull_request.create_issue_comment(INPUT_BODY)
+    def _read_event_path_data(self) -> None:
+        """read in json payload from event trigger
+        :return:            nothing
+        """
+        with open(GITHUB_EVENT_PATH) as json_file:
+            event_json = json.load(json_file)
+        self.event_json = event_json
+
+    def get_repo_object(self) -> Repository:
+        """fetch Repository() object by parsing event data
+        :return:            repo to act on
+        """
+        repo_name = self.event_json["repository"]["full_name"]
+        org, repo = repo_name.split("/")
+        org_object = self.github.get_organization(org)
+        repo_object = org_object.get_repo(repo)
+        return repo_object
+
+    def main(self) -> None:
+        """main
+        """
+        pull_request = None
+        repo = self.get_repo_object()
+
+        if GITHUB_EVENT_NAME == "pull_request":
+            pull_request = repo.get_pull(self.event_json["number"])
+        else:
+            push_head = self.event_json["after"]
+            for pr in repo.get_pulls():
+                if push_head == pr.head.sha:
+                    pull_request = pr
+
+        if not pull_request:
+            print("No PR found.")
+            sys.exit(0)
+
+        pull_request.create_issue_comment(INPUT_BODY)
+
+
+if __name__ == "__main__":
+    comment_pr = CommentPR()
+    comment_pr.main()

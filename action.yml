@@ -11,5 +11,5 @@ runs:
   using: 'docker'
   image: 'Dockerfile'
 branding:
-  icon: 'code'
+  icon: 'mic'
   color: 'blue'
