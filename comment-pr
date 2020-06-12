@@ -23,7 +23,7 @@ if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
     pull_request = r.get_pull(event_json["number"])
 else:
     push_head = event_json["after"]
-    for pr in r.pulls():
+    for pr in r.get_pulls():
         if push_head == pr.head.sha:
             pull_request = pr
 
