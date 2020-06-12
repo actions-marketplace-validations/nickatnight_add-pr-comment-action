@@ -27,6 +27,6 @@ else:
             pull_request = pr
 
 if not pull_request:
-    raise Exception("No PR found.")
+    print("No PR found.")
 
 pull_request.create_issue_comment(INPUT_BODY)
