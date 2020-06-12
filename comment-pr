@@ -2,6 +2,7 @@
 
 import json
 import os
+import sys
 
 from github import Github
 
@@ -28,5 +29,6 @@ else:
 
 if not pull_request:
     print("No PR found.")
+    sys.exit(0)
 
 pull_request.create_issue_comment(INPUT_BODY)
