@@ -16,7 +16,7 @@ with open(os.getenv("GITHUB_EVENT_PATH")) as json_file:
 repo_name = event_json["repository"]["full_name"]
 org, repo = repo_name.split("/")
 o = g.get_organization(org)
-r = g.get_repo(repo)
+r = o.get_repo(repo)
 pull_request = None
 
 if os.getenv("GITHUB_EVENT_NAME") == "pull_request":
