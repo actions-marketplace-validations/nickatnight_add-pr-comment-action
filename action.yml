@@ -1,5 +1,5 @@
 # action.yml
-name: 'add-pr-comment-action'
+name: 'Pull Request Issue Comment'
 description: 'Comment on a pull request'
 author: 'nickatnight'
 inputs:
