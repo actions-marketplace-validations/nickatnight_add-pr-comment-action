@@ -21,6 +21,7 @@ jobs:
         uses: nickatnight/add-pr-comment-action@master
         with:
           body: "Your code is :poop:"
+          allow_duplicates: false           # defaults to true
 ```
 
 ## Acknowledgements
