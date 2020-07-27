@@ -5,13 +5,15 @@ import os
 import sys
 
 from github import Github
+from github.PullRequest import PullRequest
 from github.Repository import Repository
 
 
-INPUT_BODY = os.getenv("INPUT_BODY")                # input 'body' from action
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")            # pass as env var from action
-GITHUB_EVENT_PATH = os.getenv("GITHUB_EVENT_PATH")  # prodvided by GitHub runner
-GITHUB_EVENT_NAME = os.getenv("GITHUB_EVENT_NAME")  # prodvided by GitHub runner
+INPUT_BODY = os.getenv("INPUT_BODY")                            # input 'body' from action
+INPUT_ALLOW_DUPLICATES = os.getenv("INPUT_ALLOW_DUPLICATES")    # input 'allow_duplicates' from action
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")                        # pass as env var from action
+GITHUB_EVENT_PATH = os.getenv("GITHUB_EVENT_PATH")              # prodvided by GitHub runner
+GITHUB_EVENT_NAME = os.getenv("GITHUB_EVENT_NAME")              # prodvided by GitHub runner
 
 
 class CommentPR:
@@ -34,6 +36,18 @@ class CommentPR:
         with open(GITHUB_EVENT_PATH) as json_file:
             event_json = json.load(json_file)
         self.event_json = event_json
+
+    def _check_duplicates(self, pr: PullRequest) -> None:
+        """check if body of issue comments already exists on the PR
+        :param pr:              pull request
+        :return:                None...exists script if duplicate comment found
+        """
+        comments = pr.get_issue_comments()
+
+        for comment in comments:
+            if comment.body == INPUT_BODY:
+                print("Found duplicate comment...skipping")
+                sys.exit(0)
 
     def get_repo_object(self) -> Repository:
         """fetch Repository() object by parsing event data
@@ -62,6 +76,9 @@ class CommentPR:
         if not pull_request:
             print("No PR found.")
             sys.exit(0)
+
+        if INPUT_ALLOW_DUPLICATES == "false":
+            self._check_duplicates(pull_request)
 
         pull_request.create_issue_comment(INPUT_BODY)
 
