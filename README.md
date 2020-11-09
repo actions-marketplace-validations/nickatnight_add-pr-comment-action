@@ -22,6 +22,7 @@ jobs:
         with:
           body: "Your code is :poop:"
           allow_duplicates: false           # defaults to true
+          report: report.txt
 ```
 
 ## Acknowledgements

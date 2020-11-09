@@ -11,6 +11,10 @@ inputs:
     description: 'Allow duplicate comments if True'
     required: false
     default: true
+  report:
+    description: 'report coverage results'
+    required: false
+    default: ''
 runs:
   using: 'docker'
   image: 'Dockerfile'

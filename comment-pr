@@ -11,6 +11,7 @@ from github.Repository import Repository
 
 INPUT_BODY = os.getenv("INPUT_BODY")                            # input 'body' from action
 INPUT_ALLOW_DUPLICATES = os.getenv("INPUT_ALLOW_DUPLICATES")    # input 'allow_duplicates' from action
+INPUT_REPORT = os.getenv("INPUT_REPORT")                        # input 'report' from action
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")                        # pass as env var from action
 GITHUB_EVENT_PATH = os.getenv("GITHUB_EVENT_PATH")              # prodvided by GitHub runner
 GITHUB_EVENT_NAME = os.getenv("GITHUB_EVENT_NAME")              # prodvided by GitHub runner
@@ -37,15 +38,16 @@ class CommentPR:
             event_json = json.load(json_file)
         self.event_json = event_json
 
-    def _check_duplicates(self, pr: PullRequest) -> None:
+    def _check_duplicates(self, pr: PullRequest, body: str) -> None:
         """check if body of issue comments already exists on the PR
         :param pr:              pull request
+        :param body:            comment body string
         :return:                None...exists script if duplicate comment found
         """
         comments = pr.get_issue_comments()
 
         for comment in comments:
-            if comment.body == INPUT_BODY:
+            if comment.body == body:
                 print("Found duplicate comment...skipping")
                 sys.exit(0)
 
@@ -64,6 +66,7 @@ class CommentPR:
         """
         pull_request = None
         repo = self.get_repo_object()
+        body = INPUT_BODY
 
         if GITHUB_EVENT_NAME == "pull_request":
             pull_request = repo.get_pull(self.event_json["number"])
@@ -77,10 +80,21 @@ class CommentPR:
             print("No PR found.")
             sys.exit(0)
 
-        if INPUT_ALLOW_DUPLICATES == "false":
-            self._check_duplicates(pull_request)
+        if INPUT_REPORT:
+            report = INPUT_REPORT
+            report = f"""
+                <p>
+                    <details>
+                        <pre>{report}</pre>
+                    </details>
+                </p>
+            """
+            body += INPUT_REPORT
 
-        pull_request.create_issue_comment(INPUT_BODY)
+        if INPUT_ALLOW_DUPLICATES == "false":
+            self._check_duplicates(pull_request, body)
+
+        pull_request.create_issue_comment(body)
 
 
 if __name__ == "__main__":
